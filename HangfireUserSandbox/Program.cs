@@ -1,5 +1,4 @@
 using Hangfire;
-using Hangfire.AspNetCore;
 using Hangfire.MemoryStorage;
 using HangfireUserSandbox;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -17,10 +16,6 @@ builder.Services.AddHangfire(hangfireConfig => hangfireConfig
     .UseActivator(new JobWithUserContextActivator(builder.Services.BuildServiceProvider().GetRequiredService<IServiceScopeFactory>()))
 );
 builder.Services.AddHangfireServer();
-// builder.Services.Replace(new ServiceDescriptor(typeof(AspNetCoreJobActivator), typeof(JobWithUserContextActivator), ServiceLifetime.Singleton));
-
-// builder.Services.RemoveAll(typeof(AspNetCoreJobActivator));
-// builder.Services.AddSingleton<AspNetCoreJobActivator, JobWithUserContextActivator>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -32,7 +27,7 @@ app.UseSwaggerUI();
 
 app.MapPost("EnqueueHangfireJob", (IBackgroundJobClient backgroundJobClient) => 
 {
-    backgroundJobClient.Enqueue<DoMyJob>(x => x.Handle(new MyJob
+    backgroundJobClient.Enqueue<MyJob>(x => x.Handle(new MyJob.Data
     {
         User = "Test User",
         SpecialProp = "Special Value"
@@ -42,24 +37,24 @@ app.MapPost("EnqueueHangfireJob", (IBackgroundJobClient backgroundJobClient) =>
 
 app.Run();
 
-public class MyJob : IJobWithUserContext
-{
-    public string User { get; set; }
-    public string SpecialProp { get; set; }
-}
-
-public class DoMyJob
+public class MyJob
 {
     private readonly IJobContextAccessor _jobContextAccessor;
 
-    public DoMyJob(IJobContextAccessor jobContextAccessor)
+    public MyJob(IJobContextAccessor jobContextAccessor)
     {
         _jobContextAccessor = jobContextAccessor;
     }
+    
+    public class Data : IJobWithUserContext
+    {
+        public string User { get; set; }
+        public string SpecialProp { get; set; }
+    }
 
     [CurrentUserJobFilter]
-    public void Handle(MyJob job)
+    public void Handle(Data jobData)
     {
-        Console.WriteLine($"Hello world from '{job?.User}' (injectable as '{_jobContextAccessor?.UserContext?.User}') using special prop: '{job?.SpecialProp}'");
+        Console.WriteLine($"Hello world from '{jobData?.User}' (injectable as '{_jobContextAccessor?.UserContext?.User}') using special prop: '{jobData?.SpecialProp}'");
     }
 }
