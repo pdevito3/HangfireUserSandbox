@@ -24,7 +24,7 @@ public class JobContextAccessor : IJobContextAccessor
     public JobWithUserContext? UserContext { get; set; }
 }
 
-public class CurrentUserJobFilterAttribute : JobFilterAttribute, IClientFilter, IServerFilter
+public class CurrentUserJobFilterAttribute : JobFilterAttribute, IClientFilter
 {
     public void OnCreating(CreatingContext context)
     {
@@ -43,34 +43,6 @@ public class CurrentUserJobFilterAttribute : JobFilterAttribute, IClientFilter, 
     
     public void OnCreated(CreatedContext context)
     {
-    }
-
-    public void OnPerforming(PerformingContext filterContext)
-    {
-    }
-
-    public void OnPerformed(PerformedContext filterContext)
-    {
-    }
-}
-
-internal class ServiceJobActivatorScope : JobActivatorScope
-{
-    private readonly IServiceScope _serviceScope;
-
-    public ServiceJobActivatorScope([NotNull] IServiceScope serviceScope)
-    {
-        _serviceScope = serviceScope ?? throw new ArgumentNullException(nameof(serviceScope));
-    }
-
-    public override object Resolve(Type type)
-    {
-        return ActivatorUtilities.GetServiceOrCreateInstance(_serviceScope.ServiceProvider, type);
-    }
-
-    public override void DisposeScope()
-    {
-        _serviceScope.Dispose();
     }
 }
 
@@ -98,6 +70,26 @@ public class JobWithUserContextActivator : AspNetCoreJobActivator
         userContextForJob.UserContext = new JobWithUserContext {User = user};
 
         return new ServiceJobActivatorScope(serviceScope);
+    }
+}
+
+internal class ServiceJobActivatorScope : JobActivatorScope
+{
+    private readonly IServiceScope _serviceScope;
+
+    public ServiceJobActivatorScope([NotNull] IServiceScope serviceScope)
+    {
+        _serviceScope = serviceScope ?? throw new ArgumentNullException(nameof(serviceScope));
+    }
+
+    public override object Resolve(Type type)
+    {
+        return ActivatorUtilities.GetServiceOrCreateInstance(_serviceScope.ServiceProvider, type);
+    }
+
+    public override void DisposeScope()
+    {
+        _serviceScope.Dispose();
     }
 }
 
