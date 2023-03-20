@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IJobContextAccessor, JobContextAccessor>();
-builder.Services.TryAddSingleton<IJobWithUserContext, JobWithUserContext>();
+builder.Services.AddScoped<IJobWithUserContext, JobWithUserContext>();
 builder.Services.AddHangfire(hangfireConfig => hangfireConfig
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
     .UseColouredConsoleLogProvider()
